@@ -1,0 +1,2 @@
+Generates a yaml file in the current directory for each cmavo on the given wiki page. Example: 
+	./get.sh BPFK_Section:_Pro-bridi
