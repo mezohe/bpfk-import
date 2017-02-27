@@ -1,0 +1,46 @@
+{
+	var keys = {
+		"proposed keywords": "keywords",
+		"proposed definition": "definition",
+		"usage examples": "examples",
+		"see also": "confer",
+	}
+	var nobraces = (a) => a.replace(/\u007b([^\u007d]*)\u007d/g, "$1");
+}
+doc = a:cmavo+ ls? { return a } /
+	(!cmavo .) a:doc { return a }
+cmavo = a:cmavoh3 ls? b:section* { 
+	var r = Object.assign({}, a);
+	b.forEach(function (sec) { r[sec.k] = sec.v; });
+	return r;
+}
+cmavoh3 = h3start "cmavo" " cluster"? ":" s a:$cluster s "(" s b:$selma s ")" h3end { return { word: a, class: b } }
+cluster = [a-z'.]+ (s cluster)?
+selma = [A-Zh'*0-9]+
+h3 = !cmavoh3 h3start a:$h3text h3end { return a }
+h3start = "===" !"=" s
+h3end = s "===" le
+h3text = (!h3end .)+
+section = a:(h4 / h3) ls? b:contents* ls* { a = a.toLowerCase(); return {k: keys[a] || a, v: b} }
+h4 = "====" !"=" s a:$h4text h4end { return a }
+h4end = s "====" le
+h4text = (!h4end .)+
+contents = example / li / par
+li = ls? "*"+ s a:line { return nobraces(a) }
+example = ls? ";" s a:$[^\n:]+ s ":" s b:line { return [a, b] } /
+	le? a:$(!br [^\n])+ br b:line { return [a,b] }
+br = s "<br" s "/"? ">" "\n"* s
+par = ls? a:parline+ { return a.join(" ") }
+parline = !li !example !"=" !ls a:line { return a }
+line = a:$[^\n]* le { return a }
+
+s = " "*
+le = "\n"
+ls = (s le / include / h2 / h2 contents / toc)+
+include = s "{{" incltext inclend
+inclend = "}}" s le
+incltext = (!inclend .)+
+h2 = "==" !"=" s a:$h2text h2end { return a }
+h2end = s "==" le
+h2text = (!h2end .)+
+toc = s "__TOC__" s le
