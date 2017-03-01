@@ -4,32 +4,204 @@
 		"proposed definition": "definition",
 		"usage examples": "examples",
 		"see also": "confer",
-	}
+	};
+	var pos = {
+		A: "connective",
+		BAI: "preposition",
+		BAhE: null,
+		BE: null,
+		BEI: null,
+		BIhE: "connective modifier",
+		BIhI: "connective",
+		BO: "connective modifier (right)",
+		BOI: "terminator",
+		BY: "digit",
+		CAI: "free modifier",
+		CAhA: "preposition",
+		CEhE: null,
+		CO: null,
+		COI: "vocative",
+		CU: null,
+		CUhE: "preposition",
+		DAhO: "free modifier",
+		DOI: "vocative",
+		DOhU: "terminator",
+		FA: "preposition",
+		FAhA: "preposition",
+		FAhO: "magic word",
+		FEhE: "modifier",
+		FEhU: "terminator",
+		FIhO: "cast from verb to preposition",
+		FOI: null,
+		FUhA: null,
+		FUhE: null,
+		FUhO: "free modifier",
+		GA: "forethought connective",
+		GAhO: "connective modifier (either side)",
+		GEhU: "terminator",
+		GI: null,
+		GIhA: "connective",
+		GOI: "relativizer",
+		GOhA: "verb",
+		GUhA: "forethought connective",
+		I: null,
+		JA: "connective",
+		JAI: null,
+		JOI: "connective",
+		JOhI: null,
+		KE: "parenthesis",
+		KEI: "terminator",
+		KEhE: "terminator",
+		KI: "preposition",
+		KOhA: "pronoun",
+		KU: "terminator",
+		KUhE: "terminator",
+		KUhO: "terminator",
+		LA: "article",
+		LAU: "digit modifier",
+		LAhE: "noun modifier",
+		LE: "article",
+		LEhU: null,
+		LI: "cast from digits to noun",
+		LIhU: "terminator",
+		LOhO: "terminator",
+		LOhU: "magic word",
+		LU: "cast from text to noun",
+		LUhU: "terminator",
+		MAI: "cast from digits to free modifier (right)",
+		MAhO: "cast from digits to connective",
+		ME: "cast from noun to verb",
+		MEhU: "terminator",
+		MOI: "cast from digits to verb (right)",
+		MOhE: "cast from noun to digits",
+		MOhI: "modifier",
+		NA: null,
+		NAI: "free modifier",
+		NAhE: "modifier",
+		NAhU: "cast from verb to connective",
+		NIhE: "cast from verb to digits",
+		NIhO: null,
+		NOI: "relativizer",
+		NU: "cast from sentence to verb",
+		NUhA: "cast from connective to verb",
+		NUhI: null,
+		NUhU: "terminator",
+		PA: "digit",
+		PEhE: "connective modifier",
+		PEhO: null,
+		RAhO: "free modifier",
+		ROI: "cast from digits to preposition (right)",
+		SA: "magic word",
+		SE: "modifier",
+		SI: "magic word",
+		SOI: "cast from sentence to term",
+		SU: "magic word",
+		TAhE: "preposition",
+		TEI: null,
+		TEhU: "terminator",
+		TO: "cast from text to free modifier",
+		TOI: "terminator",
+		TUhE: "cast from text to sentence",
+		TUhU: "terminator",
+		UI: "free modifier",
+		VA: "preposition",
+		VAU: "terminator",
+		VEI: "parenthesis",
+		VEhA: "preposition",
+		VEhO: "terminator",
+		VIhA: "preposition",
+		VUhO: null,
+		VUhU: "connective",
+		XI: null,
+		Y: null,
+		ZAhO: "preposition",
+		ZEI: "magic word",
+		ZEhA: "preposition",
+		ZI: "preposition",
+		ZIhE: "connective",
+		ZO: "magic word",
+		ZOI: "magic word",
+		ZOhU: null,
+	};
+	var terminators = {
+		BOI: ["letter string", "number string"],
+		DOhU: ["COI", "DOI"],
+		FEhU: ["FIhO"],
+		GEhU: ["GOI"],
+		KEI: ["NU"],
+		KEhE: ["KE"],
+		KU: ["LE", "preposition without argument"],
+		KUhE: ["PEhO"],
+		KUhO: ["NOI"],
+		LIhU: ["LU"],
+		LOhO: ["LI"],
+		LUhU: ["LAhE", "NAhE+BO"],
+		MEhU: ["ME"],
+		NUhU: ["NUhI", "NUhI+GE branch"],
+		TEhU: ["JOhI", "MAhO", "MOhE", "NAhU", "NIhE"],
+		TOI: ["TO"],
+		TUhU: ["TUhE"],
+		VAU: ["bridi tail", "terms fragment"],
+		VEhO: ["VEI"],
+	};
+	var terminated = Object.keys(terminators)
+		.map(a => terminators[a].map(b => ({[b]: a})))
+		.reduce((a, b) => a.concat(b), [])
+		.reduce(Object.assign, {});
 	var nobraces = (a) => a.replace(/\u007b([^\u007d]*)\u007d/g, "$1");
+	var noquotes = (a) => a.trim().replace(/(^['"]+)|((<br *\/?>|['"])+$)/gi, "");
+	var objify = (a) => a.filter(a => a && a.length == 2)
+		.reduce((a, b) => Object.assign(a, {[noquotes(b[0])]: noquotes(b[1])}), {});
 }
 doc = a:cmavo+ ls? { return a } /
 	(!cmavo .) a:doc { return a }
 cmavo = a:cmavoh3 ls? b:section* { 
 	var r = Object.assign({}, a);
-	b.forEach(function (sec) { r[sec.k] = sec.v; });
+	b.forEach(function (sec) {
+		if (sec.k == "defnotes") {
+			r["definition"] = sec.v[0].trim();
+			r["notes"] = sec.v[1];
+		} else if (sec.k == "examples") {
+			r[sec.k] = objify(sec.v);
+		} else {
+			r[sec.k] = sec.v;
+		}
+	});
 	return r;
 }
-cmavoh3 = h3start "cmavo" " cluster"? ":" s a:$cluster s "(" s b:$selma s ")" h3end { return { word: a, class: b } }
+cmavoh3 = h3start "cmavo" " cluster"? ":" s a:$cluster s "(" s b:$selma s ")" h3end {
+	var r = {
+		word: a, 
+		class: b,
+	};
+	var cleanclass = b.replace(/[^A-Zh]/g, "");
+	var pos_ = pos[cleanclass];
+	var terminates = terminators[cleanclass];
+	var terminatedby = terminated[cleanclass];
+	if (pos_) r.pos = pos_;
+	if (terminates) r.terminates = terminates;
+	if (terminatedby) r["terminated by"] = terminatedby;
+	return r;
+}
 cluster = [a-z'.]+ (s cluster)?
 selma = [A-Zh'*0-9]+
 h3 = !cmavoh3 h3start a:$h3text h3end { return a }
 h3start = "===" !"=" s
 h3end = s "===" le
 h3text = (!h3end .)+
-section = a:(h4 / h3) ls? b:contents* ls* { a = a.toLowerCase(); return {k: keys[a] || a, v: b} }
+section = defsection / othersection
+defsection = &("="+ s "Proposed Definition"i) a:(h4 / h3) ls? b:shortdef c:contents* ls* { a = a.toLowerCase(); return {k: "defnotes", v: [b, c]} }
+othersection = a:(h4 / h3) ls? b:contents* ls* { a = a.toLowerCase(); return {k: keys[a] || a, v: b} }
+shortdef = $(. (shortdefend / shortdef))
+shortdefend = ("."+ / "?"+ / "!"+) (" "+ "\n"* / "\n"+) / "\n"+
 h4 = "====" !"=" s a:$h4text h4end { return a }
 h4end = s "====" le
 h4text = (!h4end .)+
 contents = example / li / par
 li = ls? "*"+ s a:line { return nobraces(a) }
 example = ls? ";" s a:$[^\n:]+ s ":" s b:line { return [a, b] } /
-	le? a:$(!br [^\n])+ br b:line { return [a,b] }
-br = s "<br" s "/"? ">" "\n"* s
+	le? a:$(!br [^\n])+ br b:line { return [a, b] }
+br = s "<br"i s "/"? ">" ["'\n ]*
 par = ls? a:parline+ { return a.join(" ") }
 parline = !li !example !"=" !ls a:line { return a }
 line = a:$[^\n]* le { return a }

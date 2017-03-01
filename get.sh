@@ -6,5 +6,5 @@ if [ "$1" ]; then
 		)
 	done
 else
-	echo "ko mi dunda su papri cmene"
+	echo "ko mi dunda lo ka su papri cmene ce sumti"
 fi

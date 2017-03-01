@@ -16,7 +16,7 @@ process.argv.forEach(function (arg, index) {
 			var name = cmavo.word;
 			console.log(name);
 			delete cmavo.word;
-			yaml.writeSync(name + ".yaml", cmavo);
+			yaml.writeSync(name + ".yaml", {[name]: cmavo});
 		});
 	}
 });
